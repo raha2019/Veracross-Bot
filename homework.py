@@ -1,8 +1,5 @@
 # To do
 # - Create a progress bar?
-# - Make Program dynamic
-# - Best format for displaying 
-
 
 import time
 import os
@@ -20,7 +17,7 @@ from datetime import date, timedelta
 
 chrome_driver = os.path.abspath("chromedriver")
 
-def get_homework(username, password):
+def get_homework(username, password, num_days):
 
     url = 'https://accounts.veracross.com/austinprep/portals/login'
 
@@ -35,42 +32,38 @@ def get_homework(username, password):
     driver.find_element_by_id('recaptcha').click()
 
     driver.get("https://portals.veracross.com/austinprep/student/student/upcoming-assignments")
-
     
-    # message = "```"
-    message = ""
-    for i in range(0, 7):
-        current_date = (date.today() + timedelta(days=i)).strftime("%Y-%m-%d")
-        message += '\n**' + current_date + '**'
-        try: 
-            current_link = "https://portals.veracross.com/austinprep/student/student/daily-schedule?date=" + current_date
-            driver.get(current_link)
-            # time.sleep(1) # maybe change?
-            
-            classes = []
-            for elem in driver.find_elements_by_xpath('.//span[@class = "item-main-description"]'): # Gets the class name
-                classes.append(elem.text)
-            try:
-                for i in range(0,2): # Removes Extra Advisory and Break
-                    classes.pop(3)
-                classes.pop(4) # Removes Cougar Block
-            except IndexError:
-                message += "\n There is no homework on this day"
-            
-            x = 0
-            for i in driver.find_elements_by_class_name("assignments"):    
-                message += '\n' + classes[x] 
-                message += '\n' + i.text + '\n'
-                x += 1
-        except NoSuchElementException:
-            message += "\n There is no homework on this day"
-        message += "\n"
+    
+    current_date = (date.today() + timedelta(days=num_days)).strftime("%Y-%m-%d")
+    embed=discord.Embed(title=current_date + " - " + str(num_days) + " Day(s) Remaining")
+    embed.set_author(name="Veracross Bot", url="https://github.com/raha2019/Veracross-Bot", icon_url="https://pbs.twimg.com/profile_images/1323667180299440128/INS15fm1.jpg")
+        
+    try: 
+        current_link = "https://portals.veracross.com/austinprep/student/student/daily-schedule?date=" + current_date
+        driver.get(current_link)
+        
+        classes = []
+        for elem in driver.find_elements_by_xpath('.//span[@class = "item-main-description"]'): # Gets the class name
+            classes.append(elem.text)
+        try:
+            for i in range(0,2): # Removes Extra Advisory and Break
+                classes.pop(3)
+            classes.pop(4) # Removes Cougar Block
+        except IndexError:
+            pass
+        x = 0
+        for i in driver.find_elements_by_class_name("assignments"):  
+            text = i.text
+            if not text:
+                text = "Nothing"
+            embed.add_field(name=classes[x], value=text, inline=True)
+            x += 1
+    except NoSuchElementException:
+        pass
     time.sleep(1)
 
     driver.close()
-
-    # message += '```'
-    return message
+    return embed
 
 
 def check_credentials_exist(discord_id):
@@ -81,7 +74,6 @@ def check_credentials_exist(discord_id):
 
 def update_creds(discord_id, email, password):
     data = pd.read_csv("data.csv", index_col='discord_id', converters={i : str for i in range(100)}) # Change range if there are more than 100 rows
-    # data = pd.read_csv("data.csv", index_col='discord_id')
     if not discord_id in data.index:
         data.loc[discord_id] = [email, password]
     else:

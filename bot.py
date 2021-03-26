@@ -16,7 +16,7 @@ async def setup(ctx, arg1: str, arg2: str):
     await ctx.send("Your creds have been recorded.")
     
 @client.command(name='hw')
-async def hw(ctx): # (make arguments strings)
+async def hw(ctx, arg1=0):
 
     # Check if the credentals exist
     embed = discord.Embed(title="Homework Status")
@@ -26,7 +26,7 @@ async def hw(ctx): # (make arguments strings)
     
     message = await ctx.send(embed=embed)
 
-    if not check_credentials_exist(int(ctx.message.author.id)): # Test this too
+    if not check_credentials_exist(int(ctx.message.author.id)):
         await ctx.send("Sorry no credential exist, please use the !setup command to enter your credentials.")
         return 
     
@@ -48,11 +48,11 @@ async def hw(ctx): # (make arguments strings)
     await message.edit(embed=embed)     
 
     email, password = get_creds(int(ctx.message.author.id))
-    await ctx.send(get_homework(email, password))
-    # x = 0
-    # while x <= arg1:
-    #     await ctx.send(get_homework(email, password))
-    #     x += 1
+
+    x = 0    
+    while x <= arg1:
+        await ctx.send(embed=get_homework(email, password, x))
+        x += 1
 
 
 client.run('XXXXXX')
