@@ -1,9 +1,13 @@
 # To do
-# - Check Credentials otherwise
-# Create a progress bar?
+# - Create a progress bar?
+# - Make Program dynamic
+# - Best format for displaying 
 
 
 import time
+import os
+import discord
+
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -14,7 +18,7 @@ from selenium.webdriver.chrome.options import Options
 
 from datetime import date, timedelta
 
-
+chrome_driver = os.path.abspath("chromedriver")
 
 def get_homework(username, password):
 
@@ -24,16 +28,15 @@ def get_homework(username, password):
     chrome_options = Options()
     chrome_options.add_argument("--headless")
 
-    driver = webdriver.Chrome('/Users/rahulgupta/Desktop/chromedriver', options=chrome_options) # Change to be dynamic?
+    driver = webdriver.Chrome(chrome_driver, options=chrome_options) 
     driver.get(url)
     driver.find_element_by_id('username').send_keys(str(username))
     driver.find_element_by_id('password').send_keys(str(password))
     driver.find_element_by_id('recaptcha').click()
 
     driver.get("https://portals.veracross.com/austinprep/student/student/upcoming-assignments")
-    # print(driver.title)
 
-
+    
     # message = "```"
     message = ""
     for i in range(0, 7):
@@ -42,7 +45,7 @@ def get_homework(username, password):
         try: 
             current_link = "https://portals.veracross.com/austinprep/student/student/daily-schedule?date=" + current_date
             driver.get(current_link)
-            time.sleep(5) # maybe change?
+            # time.sleep(1) # maybe change?
             
             classes = []
             for elem in driver.find_elements_by_xpath('.//span[@class = "item-main-description"]'): # Gets the class name
@@ -69,8 +72,6 @@ def get_homework(username, password):
     # message += '```'
     return message
 
-# print(get_homework('rahul.gupta@austinprep.org', 'R@h@2213'))
-
 
 def check_credentials_exist(discord_id):
     data = pd.read_csv("data.csv", index_col='discord_id')
@@ -79,7 +80,8 @@ def check_credentials_exist(discord_id):
     return False
 
 def update_creds(discord_id, email, password):
-    data = pd.read_csv("data.csv", index_col='discord_id')
+    data = pd.read_csv("data.csv", index_col='discord_id', converters={i : str for i in range(100)}) # Change range if there are more than 100 rows
+    # data = pd.read_csv("data.csv", index_col='discord_id')
     if not discord_id in data.index:
         data.loc[discord_id] = [email, password]
     else:
@@ -98,9 +100,9 @@ def check_valid_credentials(discord_id):
 
 
     chrome_options = Options()
-    # chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--headless")
 
-    driver = webdriver.Chrome('/Users/rahulgupta/Desktop/chromedriver', options=chrome_options) # Change to be dynamic?
+    driver = webdriver.Chrome(chrome_driver, options=chrome_options) 
     driver.get(url)
     driver.find_element_by_id('username').send_keys(str(username))
     driver.find_element_by_id('password').send_keys(str(password))
@@ -110,6 +112,4 @@ def check_valid_credentials(discord_id):
         return False
     driver.close()
     return True
-
-    # driver.get("https://portals.veracross.com/austinprep/student/student/upcoming-assignments")
 
